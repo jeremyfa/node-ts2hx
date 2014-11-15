@@ -1,6 +1,6 @@
 {
   "name": "ts2hx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Transpile Typescript to Haxe.",
   "main": "src/ts2hx.js",
   "scripts": {
@@ -11,6 +11,10 @@
   },
   "author": "Jeremy Faivre <contact@jeremyfa.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jeremyfa/node-ts2hx.git"
+  },
   "dependencies": {
     "commander": "^2.5.0",
     "lodash": "^2.4.1",
