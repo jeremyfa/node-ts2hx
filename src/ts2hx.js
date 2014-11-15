@@ -1841,13 +1841,15 @@ HXDumper.prototype.value = function(input) {
 
 // Export function
 module.exports = function(source) {
+    // Get typescript source as string
     source = String(source);
-    
+
+    // Convert it to JSON AST
     json = ts2json(source);
 
-    fs.writeFileSync(__dirname+'/example-file.json', JSON.stringify(json, null, 4));
-
+    // Then compile the AST to Haxe code
     var result = new HXDumper(json).dump();
 
+    // Return result
     return result;
 };
