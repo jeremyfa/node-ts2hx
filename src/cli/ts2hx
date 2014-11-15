@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var path = require('path');
+var cli = require('commander');
+var ts2hx = require('../ts2hx');
+
+// Command line interface
+//
+cli.version(require('../../package.json').version);
+cli.usage('<file>');
+cli.parse(process.argv);
+
+// Path parsing
+var parsePath = function(input) {
+    if (input == '-') return '-';
+    var output;
+    if (!(input != null)) {
+        return rootPath;
+    }
+    output = path.normalize(input);
+    if (output.length === 0) {
+        return process.cwd();
+    }
+    if (output.charAt(0) !== '/') {
+        output = path.normalize(process.cwd() + '/./' + output);
+    }
+    if (output.length > 1 && output.charAt(output.length - 1) === '/') {
+        return output.substr(0, output.length - 1);
+    }
+    return output;
+};
+
+if (!cli.args || cli.args.length == 0) {
+    cli.outputHelp();
+    return;
+}
+
+// Get full path
+var fullPath = parsePath(cli.args[0]);
+
+// Get source code
+var tsCode = String(fs.readFileSync(fullPath));
+
+// Compile
+process.stdout.write(ts2hx(tsCode));

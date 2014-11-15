@@ -6,9 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "ts2hx": "./src/cli/ts2hx"
+  },
   "author": "Jeremy Faivre <contact@jeremyfa.com>",
   "license": "MIT",
   "dependencies": {
+    "commander": "^2.5.0",
     "lodash": "^2.4.1",
     "ts2json": "^1.0.5"
   }

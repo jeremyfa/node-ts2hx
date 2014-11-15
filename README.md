@@ -45,3 +45,13 @@ class FooClass {
 }
 ```
 
+Command Line Interface
+======================
+
+You can install the cli command:
+
+``npm install -g ts2hx``
+
+Then run it:
+
+``ts2hx someFile.ts > result.hx``
