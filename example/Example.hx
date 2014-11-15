@@ -190,8 +190,8 @@ class ClassExample implements InterfaceC {
         dict.key2 = 'val2';
         dict.key3 = 'val3';
         dict.subDict = {
-        subKey1: 'subVal1',
-        subKey2: 'subVal2'
+            subKey1: 'subVal1',
+            subKey2: 'subVal2'
         };
         Ts2Hx.set(dict, 'composed_' + this.version, 'valV');
         Ts2Hx.set(dict, this.version, 'test');
@@ -215,7 +215,7 @@ class ClassExample implements InterfaceC {
         var arrayOfFloats:Array<Float> = [1, 2, 34543.0, 4];
         var arrayOfFloats2:Array<Float> = [1.43, 2.235, 34543.543, 4.0];
         var arrayOfAny:Array<Dynamic> = [1.43, 2.235, {
-        a: 'b'
+            a: 'b'
         }, 4.0];
     }
 

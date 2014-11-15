@@ -891,7 +891,7 @@ HXDumper.prototype.dumpValue = function(input) {
         else {
             var obj = this.value(input.expression);
             var key = this.value(input.argumentExpression);
-            this.write('ts2hx.Bridge.get('+obj+', '+key+')');
+            this.write('Ts2Hx.get('+obj+', '+key+')');
         }
     }
     else if (this.isReferencingStructureOrArrayKeyAssignment(input) && !input.canBeDumpedAsArrayKeyReference) {
@@ -912,7 +912,7 @@ HXDumper.prototype.dumpValue = function(input) {
             var obj = this.value(input.left.expression);
             var key = this.value(input.left.argumentExpression);
             var val = this.value(input.right);
-            this.write('ts2hx.Bridge.set('+obj+', '+key+', '+val+')');
+            this.write('Ts2Hx.set('+obj+', '+key+', '+val+')');
         }
     }
     else if (this.isExpressionInParens(input)) {
@@ -1095,7 +1095,7 @@ HXDumper.prototype.dumpValue = function(input) {
             } else {
                 var expression = this.extract(input.expression);
                 if (expression === 'setTimeout' || expression === 'setInterval' || expression === 'clearTimeout' || expression === 'clearInterval') {
-                    this.write('ts2hx.Bridge.'+expression);
+                    this.write('Ts2Hx.'+expression);
                 } else {
                     this.dumpValue(input.expression);
                 }
@@ -1312,7 +1312,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
                     if (operator === '!') {
                         this.write('!');
                     }
-                    this.write('ts2hx.Bridge.isTrue(');
+                    this.write('Ts2Hx.isTrue(');
                     this.write(arg);
                     this.write(')');
                     return;
@@ -1336,7 +1336,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
                 if (operator === '!') {
                     this.write('!');
                 }
-                this.write('ts2hx.Bridge.isTrue(');
+                this.write('Ts2Hx.isTrue(');
                 this.write(arg);
                 this.write(')');
                 return;
@@ -1345,7 +1345,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
             if (operator === '!') {
                 this.write('!');
             }
-            this.write('ts2hx.Bridge.isTrue(');
+            this.write('Ts2Hx.isTrue(');
             this.write(arg);
             this.write(')');
             return;
@@ -1365,7 +1365,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
                 if (operator === '!=') {
                     this.write('!');
                 }
-                this.write('ts2hx.Bridge.areEqual(');
+                this.write('Ts2Hx.areEqual(');
                 this.dumpValue(condition.left);
                 this.write(', ');
                 this.dumpValue(condition.right);
