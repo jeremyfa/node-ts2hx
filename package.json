@@ -1,0 +1,15 @@
+{
+  "name": "ts2hx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/ts2hx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jeremy Faivre <contact@jeremyfa.com>",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^2.4.1",
+    "ts2json": "^1.0.5"
+  }
+}
