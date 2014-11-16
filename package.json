@@ -1,6 +1,6 @@
 {
   "name": "ts2hx",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Transpile Typescript to Haxe.",
   "main": "src/ts2hx.js",
   "scripts": {
@@ -17,7 +17,10 @@
   },
   "dependencies": {
     "commander": "^2.5.0",
+    "fs-extra": "^0.12.0",
+    "glob": "^4.0.6",
     "lodash": "^2.4.1",
+    "persist": "^0.2.7",
     "ts2json": "^1.0.5"
   }
 }

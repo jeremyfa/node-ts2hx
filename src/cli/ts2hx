@@ -4,11 +4,16 @@ var fs = require('fs');
 var path = require('path');
 var cli = require('commander');
 var ts2hx = require('../ts2hx');
+var utils = require('../utils');
 
 // Command line interface
 //
 cli.version(require('../../package.json').version);
 cli.usage('<file>');
+cli.option('-h, --haxe [haxe]', 'Directory of already compiled haxe files');
+cli.option('-t, --typescript [typescript]', 'Directory of typescript files to compile to haxe');
+cli.option('-d, --destination [destination]', 'Destination directory where final haxe files will be put');
+cli.option('-x, --exclude [exclude]', 'Directory to exclude from typescript input.');
 cli.parse(process.argv);
 
 // Path parsing
@@ -16,7 +21,7 @@ var parsePath = function(input) {
     if (input == '-') return '-';
     var output;
     if (!(input != null)) {
-        return rootPath;
+        return process.cwd();
     }
     output = path.normalize(input);
     if (output.length === 0) {
@@ -31,16 +36,40 @@ var parsePath = function(input) {
     return output;
 };
 
-if (!cli.args || cli.args.length == 0) {
+if ((!cli.args || cli.args.length == 0) && !(cli.haxe && cli.typescript && cli.destination)) {
     cli.outputHelp();
     return;
 }
 
-// Get full path
-var fullPath = parsePath(cli.args[0]);
+// Compile one file
+if (!(cli.haxe && cli.typescript && cli.destination)) {
 
-// Get source code
-var tsCode = String(fs.readFileSync(fullPath));
+    // Get full path
+    var fullPath = parsePath(cli.args[0]);
 
-// Compile
-process.stdout.write(ts2hx(tsCode));
+    // Get source code
+    var tsCode = String(fs.readFileSync(fullPath));
+
+    // Compile
+    process.stdout.write(ts2hx(tsCode));
+}
+else {
+
+    // Get hx path
+    var hxPath = parsePath(cli.haxe);
+
+    // Get ts path
+    var tsPath = parsePath(cli.typescript);
+
+    // Get dest path
+    var destPath = parsePath(cli.destination);
+
+    // Get exclude path
+    var excludePath
+    if (cli.exclude) {
+        excludePath = parsePath(cli.exclude) + '/';
+    }
+
+    // Compile directories
+    utils.compileDirectories(tsPath, hxPath, excludePath, destPath, true);
+}
