@@ -10,7 +10,6 @@ var HXDumper = function(ast) {
     // Context
     this.indent = 0;
     this.output = '';
-    this.bindThis = false;
     this.context = {};
     this.rootContext = {};
 };
@@ -61,10 +60,10 @@ HXDumper.prototype.dump = function() {
     // Reset data
     this.indent = 0;
     this.output = '';
-    this.bindThis = false;
     this.context = {};
     this.rootContext = {};
     this.hasWrittenPackage = false;
+    this.inStaticMethod = false;
 
     this.dumpSourceUnit(this.ast._sourceUnit);
 
@@ -444,9 +443,14 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
     this.thisPrefix = this.className;
 
     // Static?
+    this.previousInStaticMethod = this.inStaticMethod;
     if (modifiers['static']) {
         this.write('static ');
         this.thisPrefix += ':@static';
+
+        this.inStaticMethod = true;
+    } else {
+        this.inStaticMethod = false;
     }
 
     // Private or public?
@@ -503,6 +507,8 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
 
     this.thisPrefix = previousThisPrefix;
 
+    this.inStaticMethod = this.previousInStaticMethod;
+
     this.popContext();
 };
 
@@ -528,9 +534,14 @@ HXDumper.prototype.dumpClassMethod = function(element) {
     }
 
     // Static?
+    this.previousInStaticMethod = this.inStaticMethod;
     if (modifiers['static']) {
         this.write('static ');
         this.thisPrefix += ':@static';
+
+        this.inStaticMethod = true;
+    } else {
+        this.inStaticMethod = false;
     }
 
     // Private or public?
@@ -609,6 +620,8 @@ HXDumper.prototype.dumpClassMethod = function(element) {
                 }
             }
         }
+
+        this.inStaticMethod = this.previousInStaticMethod;
 
         this.popContext();
         this.indent--;
@@ -696,8 +709,16 @@ HXDumper.prototype.dumpPropertyAssignments = function(assignments) {
 
 HXDumper.prototype.dumpValue = function(input) {
     if (input.cachedText) {
-        if (this.inClosure && input.cachedText === 'this') {
+        if (this.inClosure && input.cachedText === 'this' && !this.inStaticMethod) {
             this.write('__this');
+        } else if (this.className && this.inStaticMethod && input.cachedText === 'this') {
+            this.write(this.className);
+        } else if (input.cachedText === 'String') {
+            this.write('Std.string');
+        } else if (input.cachedText === 'parseInt') {
+            this.write('Std.parseInt');
+        } else if (input.cachedText === 'parseFloat') {
+            this.write('Std.parseFloat');
         } else if (input.cachedText === 'undefined') {
             this.write('null');
         } else {
@@ -1846,6 +1867,9 @@ module.exports = function(source) {
 
     // Convert it to JSON AST
     json = ts2json(source);
+
+    // Uncomment to write JSON AST to disk. Useful for debug.
+    //fs.writeFileSync(__dirname+'/example.json', JSON.stringify(json, null, 4));
 
     // Then compile the AST to Haxe code
     var result = new HXDumper(json).dump();
