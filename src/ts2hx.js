@@ -707,7 +707,7 @@ HXDumper.prototype.dumpPropertyAssignments = function(assignments) {
 };
 
 
-HXDumper.prototype.dumpValue = function(input) {
+HXDumper.prototype.dumpValue = function(input, options) {
     if (input.cachedText) {
         if (this.inClosure && input.cachedText === 'this' && !this.inStaticMethod) {
             this.write('__this');
@@ -778,6 +778,9 @@ HXDumper.prototype.dumpValue = function(input) {
             this.writeIndentSpaces();
             this.write('}');
         }
+    }
+    else if ((!options || !options.ignoreCondition) && this.isCondition(input)) {
+        this.dumpCondition(input);
     }
     else if (input.operatorToken && this.extract(input.operatorToken) === 'instanceof') {
         this.write('Std.is(');
@@ -1252,6 +1255,17 @@ HXDumper.prototype.dumpValue = function(input) {
 };
 
 
+HXDumper.prototype.isCondition = function(input) {
+    if (input.left && input.right && input.operatorToken) {
+        var operator = this.extract(input.operatorToken);
+        if (operator === '===' || operator === '!==' || operator === '!=' || operator === '==' || operator === '>' || operator === '<' || operator === '>=' || operator === '<=') {
+            return true;
+        }
+    }
+    return false;
+};
+
+
 HXDumper.prototype.dumpCondition = function(condition) {
 
     // Convert strict operators
@@ -1279,9 +1293,9 @@ HXDumper.prototype.dumpCondition = function(condition) {
         if (operator === '!' && condition.operand) {
             conditionWithoutOperator = _.clone(condition);
             delete conditionWithoutOperator.operatorToken;
-            arg = this.value(conditionWithoutOperator);
+            arg = this.value(conditionWithoutOperator, {ignoreCondition: true});
         } else {
-            arg = this.value(condition);
+            arg = this.value(condition, {ignoreCondition: true});
         }
         arg = this.removeParens(arg);
 
@@ -1289,7 +1303,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
             var type = this.contextType(arg);
             if (type != null) {
                 if (type === 'Bool') {
-                    return this.dumpValue(condition);
+                    return this.dumpValue(condition, {ignoreCondition: true});
                 }
                 else if (type === 'Int' || type === 'Float') {
                     if (operator === '!') {
@@ -1344,13 +1358,13 @@ HXDumper.prototype.dumpCondition = function(condition) {
                             left: { cachedText: arg },
                             operatorToken: { cachedText: '==' },
                             right: { cachedText: 'null' }
-                        });
+                        }, {ignoreCondition: true});
                     } else {
                         return this.dumpValue({
                             left: { cachedText: arg },
                             operatorToken: { cachedText: '!=' },
                             right: { cachedText: 'null' }
-                        });
+                        }, {ignoreCondition: true});
                     }
                 }
             } else {
@@ -1373,7 +1387,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
         }
     } else {
         if (hasStrictOperator) {
-            return this.dumpValue(condition);
+            return this.dumpValue(condition, {ignoreCondition: true});
         } else {
             var right = this.removeParens(this.value(condition.right));
             if (right === 'null') {
@@ -1381,7 +1395,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
                     left: condition.left,
                     operatorToken: condition.operatorToken,
                     right: { cachedText: 'null' }
-                });
+                }, {ignoreCondition: true});
             } else {
                 if (operator === '!=') {
                     this.write('!');
@@ -1396,7 +1410,7 @@ HXDumper.prototype.dumpCondition = function(condition) {
         }
     }
 
-    return this.dumpValue(condition);
+    return this.dumpValue(condition, {ignoreCondition: true});
 };
 
 
@@ -1850,10 +1864,10 @@ HXDumper.prototype.isArrayOfStrings = function(str) {
 };
 
 
-HXDumper.prototype.value = function(input) {
+HXDumper.prototype.value = function(input, options) {
     var previousOutput = this.output;
     this.output = '';
-    this.dumpValue(input);
+    this.dumpValue(input, options);
     var value = this.output;
     this.output = previousOutput;
     return value;
