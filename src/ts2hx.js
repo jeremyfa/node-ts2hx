@@ -1380,9 +1380,13 @@ HXDumper.prototype.dumpCondition = function(condition) {
             if (operator === '!') {
                 this.write('!');
             }
-            this.write('Ts2Hx.isTrue(');
-            this.write(arg);
-            this.write(')');
+            if (this.isFunctionCall(condition)) {
+                this.write(arg);
+            } else {
+                this.write('Ts2Hx.isTrue(');
+                this.write(arg);
+                this.write(')');
+            }
             return;
         }
     } else {
@@ -1810,6 +1814,14 @@ HXDumper.prototype.isIdentifier = function(str, acceptThis) {
     } else {
         return /^[a-zA-Z][a-zA-Z0-9]*$/.test(str);
     }
+};
+
+
+HXDumper.prototype.isFunctionCall = function(input) {
+    if (input.argumentList || (input.expression && input.expression.argumentList)) {
+        return true;
+    }
+    return false;
 };
 
 
