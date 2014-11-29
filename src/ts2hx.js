@@ -915,7 +915,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         else {
             var obj = this.value(input.expression);
             var key = this.value(input.argumentExpression);
-            this.write('Ts2Hx.get('+obj+', '+key+')');
+            this.write('Ts2Hx.getValue('+obj+', '+key+')');
         }
     }
     else if (this.isReferencingStructureOrArrayKeyAssignment(input) && !input.canBeDumpedAsArrayKeyReference) {
@@ -936,7 +936,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             var obj = this.value(input.left.expression);
             var key = this.value(input.left.argumentExpression);
             var val = this.value(input.right);
-            this.write('Ts2Hx.set('+obj+', '+key+', '+val+')');
+            this.write('Ts2Hx.setValue('+obj+', '+key+', '+val+')');
         }
     }
     else if (this.isExpressionInParens(input)) {
