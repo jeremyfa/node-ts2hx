@@ -1,6 +1,6 @@
 {
   "name": "ts2hx",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Transpile Typescript to Haxe.",
   "main": "src/ts2hx.js",
   "scripts": {
