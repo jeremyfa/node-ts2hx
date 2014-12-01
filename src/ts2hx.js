@@ -3,9 +3,16 @@ var fs = require('fs');
 var ts2json = require('ts2json');
 var _ = require('lodash');
 
-var HXDumper = function(ast) {
+var HXDumper = function(ast, info) {
     // Typescript AST
     this.ast = ast;
+
+    // Filled info
+    this.info = info;
+    if (!this.info.classes) {
+        this.info.classes = {};
+        this.info.interfaces = {};
+    }
 
     // Context
     this.indent = 0;
@@ -135,15 +142,30 @@ HXDumper.prototype.dumpInterface = function(element) {
     // Haxe interface
     this.writeIndentSpaces();
     this.write('interface ');
+
+    this.previousInterfaceName = this.interfaceName;
+    this.interfaceName = this.extract(element.identifier);
+
+    // Fill interface info
+    this.info.interfaces[this.interfaceName] = {
+        parentInterfaces: {},
+        properties: {},
+        methods: {}
+    };
+
     this.write(this.extract(element.identifier));
+
     if (element.heritageClauses && element.heritageClauses.length) {
         this.dumpHeritageClauses(element.heritageClauses);
     }
+
     this.write(' ');
     var wasInInterface = this.inInterface;
     this.inInterface = true;
     this.dumpValue(element.body);
     this.inInterface = wasInInterface;
+    this.interfaceName = this.previousInterfaceName;
+
     this.writeLineBreak();
     this.writeLineBreak();
 };
@@ -162,7 +184,23 @@ HXDumper.prototype.dumpHeritageClauses = function(heritageClauses) {
         var len2 = clause.typeNames.length;
         for (var j = 0; j < len2; j++) {
             this.write(keyword+' ');
-            this.dumpValue(clause.typeNames[j]);
+            var value = this.value(clause.typeNames[j]);
+
+            // Fill class info
+            if (this.className) {
+                if (keyword === 'implements') {
+                    this.info.classes[this.className].parentInterfaces[value] = {};
+                } else {
+                    this.info.classes[this.className].parentClasses[value] = {};
+                }
+            }
+            // Fill interface info
+            else if (this.interfaceName) {
+                this.info.interfaces[this.className].parentInterfaces[value] = {};
+            }
+
+            this.write(value);
+
             if (j < len2 - 1 || i < len - 1) {
                 this.write(' ');
             }
@@ -186,8 +224,16 @@ HXDumper.prototype.dumpClass = function(element) {
     // Class keyword
     this.write('class ');
 
+    // Fill class info
+    this.info.classes[this.className] = {
+        parentInterfaces: {},
+        parentClasses: {},
+        properties: {},
+        methods: {}
+    };
+
     // Class identifier
-    this.write(this.extract(element.identifier));
+    this.write(this.className);
 
     // Type parameter
     if (element.typeParameterList) {
@@ -295,7 +341,13 @@ HXDumper.prototype.dumpClassProperty = function(element) {
     this.write('var ');
 
     // Property name
-    this.write(this.extract(element.variableDeclarator.propertyName));
+    var propertyName = this.extract(element.variableDeclarator.propertyName);
+
+    if (this.className && this.info.classes[this.className]) {
+        this.info.classes[this.className].properties[propertyName] = {};
+    }
+
+    this.write(propertyName);
 
     // Accessors?
     if (element.hasGetter || element.hasSetter) {
@@ -523,9 +575,22 @@ HXDumper.prototype.dumpClassMethod = function(element) {
     var previousThisPrefix = this.thisPrefix;
     this.thisPrefix = this.className;
 
+    var methodName = this.extract(element.propertyName);
+
     // Override?
     if (modifiers['override']) {
+        // Explicit
         this.write('override ');
+    } else {
+        if (this.className && this.info.classes[this.className]) {
+            for (var parentClass in this.info.classes[this.className].parentClasses) {
+                if (this.parentHasMethod(parentClass, methodName)) {
+                    // Computed from filled info
+                    this.write('override ');
+                    break;
+                }
+            }
+        }
     }
 
     // Inline?
@@ -560,7 +625,11 @@ HXDumper.prototype.dumpClassMethod = function(element) {
         this.write('set_');
     }
 
-    this.write(this.extract(element.propertyName));
+    if (this.className && this.info.classes[this.className]) {
+        this.info.classes[this.className].methods[methodName] = {};
+    }
+
+    this.write(methodName);
 
     this.dumpCallSignature(element.callSignature);
 
@@ -632,6 +701,27 @@ HXDumper.prototype.dumpClassMethod = function(element) {
     this.thisPrefix = previousThisPrefix;
 
     this.popContext();
+};
+
+HXDumper.prototype.parentHasMethod = function(className, methodName) {
+    var classInfo = this.info.classes[className];
+    if (!classInfo) return false;
+
+    for (var parentClassName in classInfo.parentClasses) {
+        var parentClassInfo = this.info.classes[parentClassName];
+        if (parentClassInfo) {
+            for (var parentMethodName in parentClassInfo.methods) {
+                if (methodName === parentMethodName) {
+                    return true;
+                }
+            }
+            if (this.parentHasMethod(parentClassName, methodName)) {
+                return true;
+            }
+        }
+    }
+
+    return true;
 };
 
 
@@ -1887,7 +1977,12 @@ HXDumper.prototype.value = function(input, options) {
 
 
 // Export function
-module.exports = function(source) {
+module.exports = function(source, info) {
+    // Info object that will get filled when parsing
+    if (info == null) {
+        info = {};
+    }
+
     // Get typescript source as string
     source = String(source);
 
@@ -1898,7 +1993,7 @@ module.exports = function(source) {
     //fs.writeFileSync(__dirname+'/example.json', JSON.stringify(json, null, 4));
 
     // Then compile the AST to Haxe code
-    var result = new HXDumper(json).dump();
+    var result = new HXDumper(json, info).dump();
 
     // Return result
     return result;

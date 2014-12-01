@@ -3,8 +3,8 @@ var fs = require('fs');
 var fse = require('fs-extra');
 var path = require('path');
 var glob = require('glob');
-var persist = require('persist');
 var ts2hx = require('./ts2hx');
+var tsOrderer = require('ts-orderer');
 
 exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, verbose) {
 
@@ -20,7 +20,7 @@ exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, ver
     }
 
     // Compute path of all ts files
-    var tsFiles = glob.sync(tsPath+'/**/*.ts');
+    var tsFiles = tsOrderer(tsPath);
     if (excludePath) {
         var newTsFiles = []
         for (var i = 0; i < tsFiles.length; i++) {
@@ -59,7 +59,6 @@ exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, ver
             allFileNames.push(file);
         }
     }
-    allFileNames.sort();
 
     // Create destination directory if needed
     fse.ensureDirSync(destPath);
@@ -74,6 +73,9 @@ exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, ver
     }
 
     fse.copySync(bridgeFilePath, finalBridgePath);
+
+    // Info object that gets filled at each parsing
+    var info = {};
 
     // Iterate over each file and either copy the existing
     // haxe file or compile the typescript file
@@ -105,7 +107,7 @@ exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, ver
             log('compile '+fileName+'.ts -> '+simpleFilePath);
 
             var tsCode = String(fs.readFileSync(tsFilePath));
-            var hxCode = ts2hx(tsCode);
+            var hxCode = ts2hx(tsCode, info);
 
             if (fs.existsSync(finalFilePath)) {
                 fs.unlinkSync(finalFilePath);
