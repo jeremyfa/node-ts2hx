@@ -1202,7 +1202,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
                 }
             } else if (input.expression.expression && this.extract(input.expression.expression) === 'JSON') {
                 if (input.expression.dotToken) {
-                    this.write('haxe.Json.' + this.extract(input.expression.name));
+                    this.write('Ts2Hx.JSON' + this.extract(input.expression.name));
                 } else {
                     this.dumpValue(input.expression);
                 }

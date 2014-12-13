@@ -1,9 +1,12 @@
 package;
 
+import haxe.Json;
+import haxe.Timer;
+
 class Ts2Hx {
 
-    static private var _timeouts:Map<Int,haxe.Timer> = new Map<Int,haxe.Timer>();
-    static private var _intervals:Map<Int,haxe.Timer> = new Map<Int,haxe.Timer>();
+    static private var _timeouts:Map<Int,Timer> = new Map<Int,Timer>();
+    static private var _intervals:Map<Int,Timer> = new Map<Int,Timer>();
     static private var _nextTimerId:Int = 1;
 
     static public function getValue(obj:Dynamic, key:Dynamic):Dynamic {
@@ -48,7 +51,7 @@ class Ts2Hx {
 
     static public function setTimeout(fn:Dynamic, delay:Int):Int {
         var timerId:Int = _nextTimerId++;
-        var timer:haxe.Timer = new haxe.Timer(delay);
+        var timer:Timer = new Timer(delay);
         _timeouts.set(timerId, timer);
         timer.run = function() {
             fn();
@@ -60,7 +63,7 @@ class Ts2Hx {
 
     static public function clearTimeout(id:Int):Void {
         if (_timeouts.exists(id)) {
-            var timer:haxe.Timer = _timeouts.get(id);
+            var timer:Timer = _timeouts.get(id);
             _timeouts.remove(id);
             timer.stop();
         }
@@ -68,7 +71,7 @@ class Ts2Hx {
 
     static public function setInterval(fn:Dynamic, interval:Int):Int {
         var timerId:Int = _nextTimerId++;
-        var timer:haxe.Timer = new haxe.Timer(interval);
+        var timer:Timer = new Timer(interval);
         _intervals.set(timerId, timer);
         timer.run = fn;
         return timerId;
@@ -76,9 +79,28 @@ class Ts2Hx {
 
     static public function clearInterval(id:Int):Void {
         if (_intervals.exists(id)) {
-            var timer:haxe.Timer = _intervals.get(id);
+            var timer:Timer = _intervals.get(id);
             _intervals.remove(id);
             timer.stop();
         }
+    }
+
+    static public function JSONstringify(value:Dynamic, replacer:Dynamic = null, space:Dynamic = null):String {
+        var finalSpace:String;
+        if (Std.is(space, Int)) {
+            finalSpace = "";
+            var i:Int = 0;
+            while (i < space) {
+                finalSpace += " ";
+                i++;
+            }
+        } else {
+            finalSpace = space;
+        }
+        return Json.stringify(value, replacer, finalSpace);
+    }
+
+    static public function JSONparse(value:String):Dynamic {
+        return Json.parse(value);
     }
 }
