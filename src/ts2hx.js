@@ -1783,7 +1783,7 @@ HXDumper.prototype.typeFromValue = function(input) {
         var arrayAccessPrefix = this.arrayAccessPrefix(value);
         if (arrayAccessPrefix != null) {
             var arrayType = this.contextType(arrayAccessPrefix);
-            if (arrayType.substring(0, 6) === 'Array<' && arrayType !== 'Array<Dynamic>') {
+            if (arrayType != null && arrayType.substring(0, 6) === 'Array<' && arrayType !== 'Array<Dynamic>') {
                 // Get type from array value type
                 return arrayType.substring(6, arrayType.length - 1);
             }
