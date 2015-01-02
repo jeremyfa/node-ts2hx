@@ -213,7 +213,7 @@ HXDumper.prototype.dumpClass = function(element) {
     var previousClassName = this.className;
     this.className = this.extract(element.identifier);
 
-    if (element.typeParameterList) {
+    if (element.typeParameterList && !this.classHasStaticMethodsWithTypeParameterList(element)) {
         // Generic?
         this.writeIndentedLine('@:generic');
     }
@@ -266,6 +266,29 @@ HXDumper.prototype.dumpClass = function(element) {
     this.className = previousClassName;
 
     this.classGenericTypes = null;
+};
+
+
+HXDumper.prototype.classHasStaticMethodsWithTypeParameterList = function(classInfo) {
+    if (classInfo && classInfo.classElements) {
+        var elements = classInfo.classElements;
+
+        // Check each element
+        for (var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+
+            if (element.callSignature && element.callSignature.typeParameterList) {
+                // Get class method modifiers
+                var modifiers = this.modifiers(element);
+                if (modifiers['static']) {
+                    // Found static method with type parameters
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 };
 
 
@@ -587,6 +610,13 @@ HXDumper.prototype.dumpClassMethod = function(element) {
     this.thisPrefix = this.className;
 
     var methodName = this.extract(element.propertyName);
+
+    if (modifiers['static'] && element.callSignature.typeParameterList) {
+        // Generic method
+        this.write('@:generic');
+        this.writeLineBreak();
+        this.writeIndentSpaces();
+    }
 
     // Override?
     if (modifiers['override']) {
