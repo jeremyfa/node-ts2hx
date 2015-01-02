@@ -5,7 +5,7 @@ Compile/Transpile typescript code to **ready-to-run** haxe code.
 
 ### Why?
 
-I really like **Haxe** (http://haxe.org) and **openFL** (http://openfl.org) projects but I couldn't find a proper Haxe IDE on Mac that could suit my needs. However, Typescript is officially supported on IDEs like **Webstorm** (even on Mac!), making it very convenient to use. Then came the idea of writing a Typescript to Haxe transpiler. Typescript got ECMAScript roots and static typing which are pretty similar to Haxe.
+I really like **Haxe** (http://haxe.org) and **openFL** (http://openfl.org) projects but I couldn't find a proper Haxe IDE on Mac that could suit my needs completely. However, Typescript is officially supported by several IDEs (Webstorm/IntelliJ, Visual Studio), making it very convenient to use. Then came the idea of writing a Typescript to Haxe transpiler. Typescript got ECMAScript roots and static typing which are pretty similar to Haxe.
 
 Using ``ts2hx``, I am able to compile a **pixi.js**-based (http://pixijs.com) HTML5 app written in Typescript and make it work at **almost native speed** on mobile devices with **openFL** CPP target (yes, it becomes possible to compile Typescript to C++!). The only code that needs to be re-written in Haxe is the platform-specific code (use **openFL** API instead of **pixi.js** etc...). If all the platform-specific code is properly encapsuled in reusable classes, the rest of the code (all the app logic) can become 100% portable and compilable to **valid haxe code**.
 

@@ -584,7 +584,10 @@ HXDumper.prototype.dumpClassMethod = function(element) {
     } else {
         if (this.className && this.info.classes[this.className]) {
             for (var parentClass in this.info.classes[this.className].parentClasses) {
-                if (this.parentHasMethod(parentClass, methodName)) {
+
+                var classInfo = this.info.classes[parentClass];
+
+                if ((classInfo != null && classInfo.methods[methodName]) || this.parentHasMethod(parentClass, methodName)) {
                     // Computed from filled info
                     this.write('override ');
                     break;
@@ -710,10 +713,8 @@ HXDumper.prototype.parentHasMethod = function(className, methodName) {
     for (var parentClassName in classInfo.parentClasses) {
         var parentClassInfo = this.info.classes[parentClassName];
         if (parentClassInfo) {
-            for (var parentMethodName in parentClassInfo.methods) {
-                if (methodName === parentMethodName) {
-                    return true;
-                }
+            if (parentClassInfo.methods[methodName] != null) {
+                return true;
             }
             if (this.parentHasMethod(parentClassName, methodName)) {
                 return true;
@@ -721,7 +722,7 @@ HXDumper.prototype.parentHasMethod = function(className, methodName) {
         }
     }
 
-    return true;
+    return false;
 };
 
 
