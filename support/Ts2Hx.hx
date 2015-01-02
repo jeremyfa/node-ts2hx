@@ -54,9 +54,9 @@ class Ts2Hx {
         var timer:Timer = new Timer(delay);
         _timeouts.set(timerId, timer);
         timer.run = function() {
-            fn();
             timer.stop();
             _timeouts.remove(timerId);
+            fn();
         };
         return timerId;
     }
