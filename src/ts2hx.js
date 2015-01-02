@@ -237,7 +237,9 @@ HXDumper.prototype.dumpClass = function(element) {
 
     // Type parameter
     if (element.typeParameterList) {
-        this.dumpTypeParameterList(element.typeParameterList);
+        this.classGenericTypes = this.dumpTypeParameterList(element.typeParameterList);
+    } else {
+        this.classGenericTypes = null;
     }
 
     if (element.heritageClauses) {
@@ -262,6 +264,8 @@ HXDumper.prototype.dumpClass = function(element) {
     this.writeLineBreak();
 
     this.className = previousClassName;
+
+    this.classGenericTypes = null;
 };
 
 
@@ -514,7 +518,12 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
 
     this.write('function new');
 
-    this.dumpCallSignature(element.callSignature);
+    this.genericTypes = this.dumpCallSignature(element.callSignature);
+    if (this.classGenericTypes) {
+        for (var key in this.classGenericTypes) {
+            this.genericTypes[key] = 1;
+        }
+    }
 
     if (element.block) {
         this.write(' {');
@@ -562,6 +571,8 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
     this.inStaticMethod = this.previousInStaticMethod;
 
     this.popContext();
+
+    this.genericTypes = null;
 };
 
 
@@ -634,7 +645,12 @@ HXDumper.prototype.dumpClassMethod = function(element) {
 
     this.write(methodName);
 
-    this.dumpCallSignature(element.callSignature);
+    this.genericTypes = this.dumpCallSignature(element.callSignature);
+    if (this.classGenericTypes) {
+        for (var key in this.classGenericTypes) {
+            this.genericTypes[key] = 1;
+        }
+    }
 
     // Type
     if (element.callSignature.typeAnnotation && element.callSignature.typeAnnotation.type) {
@@ -704,6 +720,8 @@ HXDumper.prototype.dumpClassMethod = function(element) {
     this.thisPrefix = previousThisPrefix;
 
     this.popContext();
+
+    this.genericTypes = null;
 };
 
 HXDumper.prototype.parentHasMethod = function(className, methodName) {
@@ -727,6 +745,8 @@ HXDumper.prototype.parentHasMethod = function(className, methodName) {
 
 
 HXDumper.prototype.dumpTypeParameterList = function(parameterList) {
+    var types = {};
+
     this.write('<');
 
     if (parameterList.typeParameters) {
@@ -734,7 +754,9 @@ HXDumper.prototype.dumpTypeParameterList = function(parameterList) {
         for (var i = 0; i < len; i++) {
             var input = parameterList.typeParameters[i];
 
-            this.dumpValue(input);
+            var value = this.value(input);
+            this.write(value);
+            types[value] = 1;
 
             if (input.constraint) {
                 if (input.constraint.extendsKeyword) {
@@ -752,6 +774,8 @@ HXDumper.prototype.dumpTypeParameterList = function(parameterList) {
     }
 
     this.write('>');
+
+    return types;
 };
 
 
@@ -770,6 +794,13 @@ HXDumper.prototype.dumpStatements = function(statements, dontFinishWithLineBreak
 
 
 HXDumper.prototype.dumpCallSignature = function(signature) {
+
+    var genericTypes = {};
+
+    if (signature.typeParameterList) {
+        genericTypes[this.dumpTypeParameterList(signature.typeParameterList)] = 1;
+    }
+
     if (signature.parameterList) {
         this.write('(');
 
@@ -779,6 +810,8 @@ HXDumper.prototype.dumpCallSignature = function(signature) {
 
         this.write(')');
     }
+
+    return genericTypes;
 };
 
 
@@ -1166,8 +1199,19 @@ HXDumper.prototype.dumpValue = function(input, options) {
                 this.dumpVariableDeclaration(input.variableDeclaration);
             }
         }
+        var useUnsafeCast = false;
         if (input.lessThanToken && input.type && input.greaterThanToken) {
-            this.write('cast(');
+            if (this.genericTypes) {
+                var type = this.type(input.type);
+                if (this.genericTypes[type]) {
+                    useUnsafeCast = true;
+                    this.write('cast ');
+                } else {
+                    this.write('cast(');
+                }
+            } else {
+                this.write('cast(');
+            }
         }
         if (input.type && !input.lessThanToken && !input.greaterThanToken) {
             this.write(this.type(input.type));
@@ -1299,7 +1343,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         if (input.statements) {
             this.dumpStatements(input.statements);
         }
-        if (input.greaterThanToken && input.type && input.greaterThanToken) {
+        if (!useUnsafeCast && input.greaterThanToken && input.type && input.greaterThanToken) {
             this.write(', ');
             this.write(this.type(input.type));
             this.write(')');
