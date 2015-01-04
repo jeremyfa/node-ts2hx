@@ -196,7 +196,7 @@ HXDumper.prototype.dumpHeritageClauses = function(heritageClauses) {
             }
             // Fill interface info
             else if (this.interfaceName) {
-                this.info.interfaces[this.className].parentInterfaces[value] = {};
+                this.info.interfaces[this.interfaceName].parentInterfaces[value] = {};
             }
 
             this.write(value);
