@@ -473,6 +473,44 @@ for (key in Reflect.fields(someObject)) {
 }
 ```
 
+### Call of forEach method of an Array
+
+``Array.forEach`` are transpiled to the closed equivalent in haxe (requires **Ts2Hx.hx** support file).
+
+**Typescript**
+
+```typescript
+['item1', 'item2'].forEach(function(value) {
+    console.log(value);
+});
+```
+
+**Haxe**
+
+```haxe
+Ts2Hx.forEach(['item1', 'item2'], function(value) {
+    trace(value);
+});
+```
+
+### JSON parsing and dumping
+
+``JSON.parse`` and ``JSON.stringify`` are transpiled to the closed equivalent in haxe (requires **Ts2Hx.hx** support file).
+
+**Typescript**
+
+```typescript
+var jsonValue:any = JSON.parse('{"a":1, "b": ["c", "d", "e"]}');
+var jsonString:string = JSON.stringify(jsonValue);
+```
+
+**Haxe**
+
+```haxe
+var jsonValue:Dynamic = Ts2Hx.JSONparse('{"a":1, "b": ["c", "d", "e"]}');
+var jsonString:String = Ts2Hx.JSONstringify(jsonValue);
+```
+
 ### More examples
 
 You can find more examples in the ``examples/`` directory, such as ``try``/``catch``, ``do``/``while`` etc...
