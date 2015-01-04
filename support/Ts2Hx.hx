@@ -27,11 +27,19 @@ class Ts2Hx {
     }
 
     static public function isTrueInt(aInt:Int):Bool {
+        #if cpp
+        return aInt != 0.0 && !Math.isNaN(aInt);
+        #else
         return aInt != 0 && aInt == aInt;
+        #end
     }
 
     static public function isTrueFloat(aFloat:Float):Bool {
+        #if cpp
+        return aFloat != 0.0 && !Math.isNaN(aFloat);
+        #else
         return aFloat != 0.0 && aFloat == aFloat;
+        #end
     }
 
     static public function isTrueString(aString:String):Bool {
