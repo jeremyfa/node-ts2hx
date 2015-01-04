@@ -101,6 +101,12 @@ class ClassExample implements InterfaceC {
         Ts2Hx.setTimeout(function() {
             __this.onReady();
         }, 1000);
+        Ts2Hx.forEach(['item1', 'item2'], function(value) {
+            trace(value);
+        });
+        Ts2Hx.forEach(['item1', 'item2'], function(value, i, theArray) {
+            trace(i + ' -> ' + value + ' (in array: ' + theArray + ')');
+        });
         switch (enumValue) {
             case EnumExample.VALUE1, EnumExample.VALUE2:
                 trace('enum value is 1 or 2');
@@ -119,9 +125,9 @@ class ClassExample implements InterfaceC {
             var e:String = cast(__e, String);
             trace("catched error: " + e);
         }
-        var jsonValue:Dynamic = haxe.Json.parse('{"a":1, "b": ["c", "d", "e"]}');
+        var jsonValue:Dynamic = Ts2Hx.JSONparse('{"a":1, "b": ["c", "d", "e"]}');
         trace(jsonValue);
-        var jsonString:String = haxe.Json.stringify(jsonValue);
+        var jsonString:String = Ts2Hx.JSONstringify(jsonValue);
         trace('JSON string: ' + jsonString);
         if (Ts2Hx.isTrue(jsonValue)) {
             trace('JSON value exists');
@@ -154,7 +160,7 @@ class ClassExample implements InterfaceC {
         if (jsonValue != null) {
             for (key in Reflect.fields(jsonValue)) {
                 trace('JSON key: ' + key);
-                trace('JSON value: ' + Ts2Hx.get(jsonValue, key));
+                trace('JSON value: ' + Ts2Hx.getValue(jsonValue, key));
             }
         }
         var i1:Int = 0;
@@ -193,8 +199,8 @@ class ClassExample implements InterfaceC {
             subKey1: 'subVal1',
             subKey2: 'subVal2'
         };
-        Ts2Hx.set(dict, 'composed_' + this.version, 'valV');
-        Ts2Hx.set(dict, this.version, 'test');
+        Ts2Hx.setValue(dict, 'composed_' + this.version, 'valV');
+        Ts2Hx.setValue(dict, this.version, 'test');
         trace('Dict:');
         trace(dict);
         Reflect.deleteField(dict, 'key2');

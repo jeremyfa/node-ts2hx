@@ -87,6 +87,16 @@ class ClassExample implements InterfaceC {
             this.onReady();
         }, 1000);
 
+        // Foreach example over array
+        ['item1', 'item2'].forEach(function(value) {
+            console.log(value);
+        });
+
+        // Foreach example over array with more arguments
+        ['item1', 'item2'].forEach(function(value, i, theArray) {
+            console.log(i + ' -> ' + value + ' (in array: ' + theArray + ')');
+        });
+
         // Example of switch, on enum
         // In haxe, fall-through cases will be merged in one
         // and break occurences will be removed
