@@ -879,6 +879,19 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.write(input.cachedText);
         }
     }
+    else if (this.isForeachIteration(input)) {
+        this.write('Ts2Hx.forEach(');
+        var expression = _.clone(input.expression.expression);
+        delete expression.dotToken;
+        delete expression.name;
+        this.dumpValue(expression);
+        this.write(', ');
+        this.dumpArguments(input.expression.argumentList.arguments);
+        this.write(')');
+        if (input.semicolonToken) {
+            this.write(';');
+        }
+    }
     else if (input.enumKeyword) {
         this.write('enum ');
         this.dumpValue(input.identifier);
@@ -1590,6 +1603,14 @@ HXDumper.prototype.isExpressionInParens = function(input) {
             if (input[key]) numberOfKeys++;
         }
         return numberOfKeys === 3;
+    }
+    return false;
+};
+
+
+HXDumper.prototype.isForeachIteration = function(input) {
+    if (input.expression && input.expression.argumentList && input.expression.argumentList.arguments && input.expression.expression && input.expression.expression.dotToken && input.expression.expression.name && this.extract(input.expression.expression.name) == 'forEach') {
+        return true;
     }
     return false;
 };

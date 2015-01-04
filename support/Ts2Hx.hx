@@ -111,4 +111,51 @@ class Ts2Hx {
     static public function JSONparse(value:String):Dynamic {
         return Json.parse(value);
     }
+
+    static public function forEach(input:Dynamic, callback:Dynamic):Void {
+        if (Std.is(input, Array)) {
+            var inputAsArray:Array<Dynamic> = cast(input, Array<Dynamic>);
+            var len:Int = inputAsArray.length;
+            var i:Int = 0;
+            var numberOfArgs:Int = -1;
+
+            // Very dirty way of checking the callback signature
+            // Using reflection would be a better idea, if possible. Maybe Rtti on haxe 3.2.
+            if (i < len) {
+                try {
+                    callback(inputAsArray[i], i, inputAsArray);
+                    numberOfArgs = 3;
+                } catch (e:Dynamic) {
+                    try {
+                        callback(inputAsArray[i], i);
+                        numberOfArgs = 2;
+                    } catch (e:Dynamic) {
+                        callback(inputAsArray[i]);
+                        numberOfArgs = 1;
+                    }
+                }
+                i++;
+            }
+            if (numberOfArgs == 3) {
+                while (i < len) {
+                    callback(inputAsArray[i], i, inputAsArray);
+                    i++;
+                }
+            }
+            else if (numberOfArgs == 2) {
+                while (i < len) {
+                    callback(inputAsArray[i], i);
+                    i++;
+                }
+            }
+            else {
+                while (i < len) {
+                    callback(inputAsArray[i]);
+                    i++;
+                }
+            }
+        } else {
+            Reflect.callMethod(input, 'forEach', [callback]);
+        }
+    }
 }
