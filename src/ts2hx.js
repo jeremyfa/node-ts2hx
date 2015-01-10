@@ -579,12 +579,19 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
         // Save output in case we need to add closures
         var previousOutput;
         var numberOfLinesInPreviousOutput;
+        var hasClosures = false;
         if (!this.inClosure) {
             previousOutput = this.output;
             numberOfLinesInPreviousOutput = this.output.split("\n").length;
             this.numberOfLinesBeforeOutput += numberOfLinesInPreviousOutput;
             this.output = '';
             this.hasClosures = false;
+
+            // Add 1 for the '__this = ...' line if the content has closures
+            if (element.block.statements && this.hasClosuresInStatements(element.block.statements)) {
+                hasClosures = true;
+                this.numberOfLinesBeforeOutput++;
+            }
         }
 
         // Function body
@@ -597,6 +604,9 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
             var statementsOutput = this.output;
             this.output = previousOutput;
             this.numberOfLinesBeforeOutput -= numberOfLinesInPreviousOutput;
+            if (hasClosures) {
+                this.numberOfLinesBeforeOutput--;
+            }
             if (this.hasClosures) {
                 // If the statements contain any closure, add __this binding
                 this.writeIndentedLine('var __this = this;');
@@ -730,14 +740,19 @@ HXDumper.prototype.dumpClassMethod = function(element) {
         // Save output in case we need to add closures
         var previousOutput;
         var numberOfLinesInPreviousOutput;
-        var previousLineMapping;
+        var hasClosures = false;
         if (!this.inClosure) {
             previousOutput = this.output;
-            previousLineMapping = _.clone(this.lineMapping);
             numberOfLinesInPreviousOutput = this.output.split("\n").length;
-            this.numberOfLinesBeforeOutput += numberOfLinesInPreviousOutput + 1; // Add 1 for the '__this = ...' line.
+            this.numberOfLinesBeforeOutput += numberOfLinesInPreviousOutput;
             this.output = '';
             this.hasClosures = false;
+
+            // Add 1 for the '__this = ...' line if the content has closures
+            if (element.block.statements && this.hasClosuresInStatements(element.block.statements)) {
+                hasClosures = true;
+                this.numberOfLinesBeforeOutput++;
+            }
         }
 
         // Function body
@@ -749,7 +764,10 @@ HXDumper.prototype.dumpClassMethod = function(element) {
         if (!this.inClosure) {
             var statementsOutput = this.output;
             this.output = previousOutput;
-            this.numberOfLinesBeforeOutput -= numberOfLinesInPreviousOutput + 1;
+            this.numberOfLinesBeforeOutput -= numberOfLinesInPreviousOutput;
+            if (hasClosures) {
+                this.numberOfLinesBeforeOutput--;
+            }
             if (this.hasClosures) {
                 // If the statements contain any closure, add __this binding
                 this.writeIndentedLine('var __this = this;');
@@ -855,6 +873,19 @@ HXDumper.prototype.dumpStatements = function(statements, dontFinishWithLineBreak
 };
 
 
+HXDumper.prototype.hasClosuresInStatements = function(statements) {
+    var previousHasClosures = this.hasClosures;
+    this.hasClosures = false;
+    var len = statements.length;
+    for (var i = 0; i < len; i++) {
+        this.value(statements[i]);
+    }
+    var hasClosures = this.hasClosures;
+    this.hasClosures = previousHasClosures;
+    return hasClosures;
+};
+
+
 HXDumper.prototype.dumpCallSignature = function(signature) {
 
     var genericTypes = {};
@@ -912,6 +943,10 @@ HXDumper.prototype.updateLineMappingWithInput = function(input, customFullStart)
             dstCurrentLine += this.numberOfLinesBeforeOutput - 1;
         }
         if (this.lineMapping[String(dstCurrentLine)] == null) {
+            if (dstCurrentLine == 82) {
+                var srcBefore = JSON.stringify(this.ast.text.value.substring(0, fullStart+1));
+                console.log('LINE IS '+dstCurrentLine);
+            }
             var srcCurrentLine = this.ast.text.value.substring(0, fullStart+1).split("\n").length;
             this.lineMapping[String(dstCurrentLine)] = srcCurrentLine;
             console.log(dstCurrentLine + ' -> ' + srcCurrentLine);
