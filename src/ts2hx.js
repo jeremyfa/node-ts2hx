@@ -142,6 +142,7 @@ HXDumper.prototype.dumpModuleElements = function(elements) {
 HXDumper.prototype.dumpModule = function(element) {
     this.writeIndentSpaces();
     this.write('package ');
+    this.updateLineMappingWithInput(element.moduleKeyword);
     this.dumpValue(element.name);
     this.write(';');
     this.writeLineBreak();
@@ -153,6 +154,7 @@ HXDumper.prototype.dumpModule = function(element) {
 HXDumper.prototype.dumpInterface = function(element) {
     // Haxe interface
     this.writeIndentSpaces();
+    this.updateLineMappingWithInput(element.interfaceKeyword);
     this.write('interface ');
 
     this.previousInterfaceName = this.interfaceName;
@@ -165,7 +167,7 @@ HXDumper.prototype.dumpInterface = function(element) {
         methods: {}
     };
 
-    this.write(this.extract(element.identifier, true));
+    this.write(this.extract(element.identifier));
 
     if (element.heritageClauses && element.heritageClauses.length) {
         this.dumpHeritageClauses(element.heritageClauses);
@@ -229,12 +231,13 @@ HXDumper.prototype.dumpClass = function(element) {
     }
 
     var previousClassName = this.className;
-    this.className = this.extract(element.identifier, true);
+    this.className = this.extract(element.identifier);
 
     // Indent spaces
     this.writeIndentSpaces();
 
     // Class keyword
+    this.updateLineMappingWithInput(element.classKeyword);
     this.write('class ');
 
     // Fill class info
@@ -273,6 +276,7 @@ HXDumper.prototype.dumpClass = function(element) {
     this.indent--;
 
     // Add line
+    this.updateLineMappingWithInput(element.closeBraceToken);
     this.writeIndentedLine('}');
     this.writeLineBreak();
 
@@ -362,7 +366,7 @@ HXDumper.prototype.dumpClassElements = function(elements) {
 HXDumper.prototype.dumpClassProperty = function(element) {
     this.writeIndentSpaces();
 
-    var modifiers = this.modifiers(element, true);
+    var modifiers = this.modifiers(element);
 
     // Static?
     var prefix = this.className+':';
@@ -381,7 +385,8 @@ HXDumper.prototype.dumpClassProperty = function(element) {
     this.write('var ');
 
     // Property name
-    var propertyName = this.extract(element.variableDeclarator.propertyName, true);
+    this.updateLineMappingWithInput(element.variableDeclarator.propertyName);
+    var propertyName = this.extract(element.variableDeclarator.propertyName);
 
     if (this.className && this.info.classes[this.className]) {
         this.info.classes[this.className].properties[propertyName] = {};
@@ -411,7 +416,7 @@ HXDumper.prototype.dumpClassProperty = function(element) {
     if (element.variableDeclarator.typeAnnotation && element.variableDeclarator.typeAnnotation.type) {
         var type = this.type(element.variableDeclarator.typeAnnotation.type);
         if (type) {
-            this.addRootContextType(prefix+this.extract(element.variableDeclarator.propertyName, true), type);
+            this.addRootContextType(prefix+this.extract(element.variableDeclarator.propertyName), type);
             this.write(':'+type);
             didComputeType = true;
         }
@@ -426,7 +431,7 @@ HXDumper.prototype.dumpClassProperty = function(element) {
             if (!didComputeType) {
                 var type = this.typeFromValue(element.variableDeclarator.equalsValueClause.value);
                 if (type != null) {
-                    this.addRootContextType(prefix+this.extract(element.variableDeclarator.propertyName, true), type);
+                    this.addRootContextType(prefix+this.extract(element.variableDeclarator.propertyName), type);
                     this.write(':'+type);
                     didComputeType = true;
                 }
@@ -511,9 +516,9 @@ HXDumper.prototype.dumpClassPropertiesAssignmentsFromConstructor = function(elem
         for (var i = 0; i < len; i++) {
             var parameter = element.callSignature.parameterList.parameters[i];
             if (parameter.modifiers) {
-                var modifiers = this.modifiers(parameter, true);
+                var modifiers = this.modifiers(parameter);
                 if (modifiers.private || modifiers.public) {
-                    var identifier = this.extract(parameter.identifier, true);
+                    var identifier = this.extract(parameter.identifier);
                     this.writeIndentSpaces();
                     this.write('this.'+identifier+' = '+identifier+';');
                     this.writeLineBreak();
@@ -529,7 +534,7 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
 
     this.writeIndentSpaces();
 
-    var modifiers = this.modifiers(element, true);
+    var modifiers = this.modifiers(element);
 
     var previousThisPrefix = this.thisPrefix;
     this.thisPrefix = this.className;
@@ -552,6 +557,7 @@ HXDumper.prototype.dumpClassConstructor = function(element) {
         this.write('public ');
     }
 
+    this.updateLineMappingWithInput(element.constructorKeyword);
     this.write('function new');
 
     this.genericTypes = this.dumpCallSignature(element.callSignature);
@@ -621,7 +627,7 @@ HXDumper.prototype.dumpClassMethod = function(element) {
 
     this.writeIndentSpaces();
 
-    var modifiers = this.modifiers(element, true);
+    var modifiers = this.modifiers(element);
 
     var previousThisPrefix = this.thisPrefix;
     this.thisPrefix = this.className;
@@ -677,6 +683,7 @@ HXDumper.prototype.dumpClassMethod = function(element) {
         this.write('public ');
     }
 
+    this.updateLineMappingWithInput(element.callSignature, this.getFullStart(element.callSignature));
     this.write('function ');
 
     if (element.getKeyword) {
@@ -723,10 +730,12 @@ HXDumper.prototype.dumpClassMethod = function(element) {
         // Save output in case we need to add closures
         var previousOutput;
         var numberOfLinesInPreviousOutput;
+        var previousLineMapping;
         if (!this.inClosure) {
             previousOutput = this.output;
+            previousLineMapping = _.clone(this.lineMapping);
             numberOfLinesInPreviousOutput = this.output.split("\n").length;
-            this.numberOfLinesBeforeOutput += numberOfLinesInPreviousOutput;
+            this.numberOfLinesBeforeOutput += numberOfLinesInPreviousOutput + 1; // Add 1 for the '__this = ...' line.
             this.output = '';
             this.hasClosures = false;
         }
@@ -740,7 +749,7 @@ HXDumper.prototype.dumpClassMethod = function(element) {
         if (!this.inClosure) {
             var statementsOutput = this.output;
             this.output = previousOutput;
-            this.numberOfLinesBeforeOutput -= numberOfLinesInPreviousOutput;
+            this.numberOfLinesBeforeOutput -= numberOfLinesInPreviousOutput + 1;
             if (this.hasClosures) {
                 // If the statements contain any closure, add __this binding
                 this.writeIndentedLine('var __this = this;');
@@ -755,7 +764,7 @@ HXDumper.prototype.dumpClassMethod = function(element) {
             if (element.callSignature.parameterList.parameters.length > 0) {
                 var name = element.callSignature.parameterList.parameters[0].identifier;
                 if (name) {
-                    this.writeIndentedLine('return '+this.extract(name, true)+';');
+                    this.writeIndentedLine('return '+this.extract(name)+';');
                 }
             }
         }
@@ -811,11 +820,11 @@ HXDumper.prototype.dumpTypeParameterList = function(parameterList) {
 
             if (input.constraint) {
                 if (input.constraint.extendsKeyword) {
-                    this.extract(input.constraint.extendsKeyword, true);
+                    this.extract(input.constraint.extendsKeyword);
                     this.write(':');
                 }
                 if (input.constraint.typeOrExpression) {
-                    this.extract(input.constraint.typeOrExpression, true);
+                    this.extract(input.constraint.typeOrExpression);
                     this.dumpValue(input.constraint.typeOrExpression);
                 }
             }
@@ -884,29 +893,28 @@ HXDumper.prototype.dumpPropertyAssignments = function(assignments) {
 };
 
 
-HXDumper.prototype.updateLineMappingWithInput = function(input) {
+HXDumper.prototype.updateLineMappingWithInput = function(input, customFullStart) {
+
+    if (input == null) return;
 
     if (!this.isExtractingValue) {
         fullStart = input._fullStart;
         if (fullStart == null) {
-            fullStart = this.getFullStart(input);
-        }
-        if (fullStart == null) return;
-
-        var numberOfWrittenLines = this.numberOfLinesBeforeOutput + this.output.split("\n").length;
-        if (this.lastLineNumber == null) {
-            this.lastLineNumber = -1;
-        }
-        if (numberOfWrittenLines < this.lastLineNumber) return;
-        this.lastLineNumber = numberOfWrittenLines;
-        var lineMap = this.ast.text._lineMap.lineStarts;
-        var numberOfParsedLines = 0;
-        while (numberOfParsedLines < lineMap.length && lineMap[numberOfParsedLines] <= fullStart) {
-            numberOfParsedLines++;
+            if (customFullStart == null) {
+                return;
+            } else {
+                fullStart = customFullStart;
+            }
         }
 
-        if (this.lineMapping[numberOfWrittenLines] == null) {
-            this.lineMapping[numberOfWrittenLines] = numberOfParsedLines;
+        var dstCurrentLine = this.output.split("\n").length; // First line is 1
+        if (this.numberOfLinesBeforeOutput > 0) {
+            dstCurrentLine += this.numberOfLinesBeforeOutput - 1;
+        }
+        if (this.lineMapping[String(dstCurrentLine)] == null) {
+            var srcCurrentLine = this.ast.text.value.substring(0, fullStart+1).split("\n").length;
+            this.lineMapping[String(dstCurrentLine)] = srcCurrentLine;
+            console.log(dstCurrentLine + ' -> ' + srcCurrentLine);
         }
     }
 };
@@ -943,6 +951,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
     this.updateLineMappingWithInput(input);
 
     if (input.cachedText) {
+        this.updateLineMappingWithInput(input);
         if (this.inClosure && input.cachedText === 'this' && !this.inStaticMethod) {
             this.write('__this');
         } else if (this.className && this.inStaticMethod && input.cachedText === 'this') {
@@ -960,9 +969,10 @@ HXDumper.prototype.dumpValue = function(input, options) {
         }
     }
     else if (this.isForeachIteration(input)) {
+        this.updateLineMappingWithInput(input);
         this.write('Ts2Hx.forEach(');
         var expression = _.clone(input.expression.expression);
-        this.extract(expression.expression, true);
+        this.extract(expression.expression);
         delete expression.dotToken;
         delete expression.name;
         this.dumpValue(expression);
@@ -974,6 +984,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         }
     }
     else if (input.enumKeyword) {
+        this.updateLineMappingWithInput(input);
         this.write('enum ');
         this.dumpValue(input.identifier);
         this.write(' {');
@@ -1006,6 +1017,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.writeLineBreak();
             this.writeIndentSpaces();
         }
+        this.updateLineMappingWithInput(input.forKeyword);
         this.write('while (');
         this.dumpCondition(input.condition);
         this.write(') ');
@@ -1188,8 +1200,10 @@ HXDumper.prototype.dumpValue = function(input, options) {
         }
     }
     else if (this.isExpressionInParens(input)) {
+        this.updateLineMappingWithInput(input.openParenToken);
         this.write(this.extract(input.openParenToken));
         this.dumpValue(input.expression);
+        this.updateLineMappingWithInput(input.closeParenToken);
         this.write(this.extract(input.closeParenToken));
     }
     else {
@@ -1275,6 +1289,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         }
         if (input.openBraceToken) {
             this.write('{');
+            this.updateLineMappingWithInput(input.openBraceToken);
             this.indent++;
             this.pushContext();
             this.writeLineBreak();
@@ -1299,6 +1314,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         }
         if (!input.doKeyword) {
             if (input.openParenToken) {
+                this.updateLineMappingWithInput(input.openParenToken);
                 this.write('(');
             }
             if (input.condition) {
@@ -1412,6 +1428,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.dumpValue(input.right);
         }
         if (input.openBracketToken) {
+            this.updateLineMappingWithInput(input.openBracketToken);
             this.write(this.extract(input.openBracketToken));
         }
         if (input.argumentExpression) {
@@ -1427,6 +1444,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.dumpExpressions(input.expressions);
         }
         if (input.closeBracketToken) {
+            this.updateLineMappingWithInput(input.closeBracketToken);
             this.write(this.extract(input.closeBracketToken));
         }
         if (input.argumentList) {
@@ -1489,6 +1507,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.indent--;
             this.popContext();
             this.writeIndentSpaces();
+            this.updateLineMappingWithInput(input.closeBraceToken);
             this.write('}');
         }
         if (input.elseClause) {
@@ -1526,6 +1545,15 @@ HXDumper.prototype.isCondition = function(input) {
 
 
 HXDumper.prototype.dumpCondition = function(condition) {
+    if (condition.left) {
+        this.updateLineMappingWithInput(condition.left);
+    } else if (condition.operatorToken) {
+        this.updateLineMappingWithInput(condition.operatorToken);
+    } else if (condition.right) {
+        this.updateLineMappingWithInput(condition.right);
+    } else if (condition.operand) {
+        this.updateLineMappingWithInput(condition.operand);
+    }
 
     // Convert strict operators
     var operator = null;
@@ -1833,6 +1861,7 @@ HXDumper.prototype.dumpArguments = function(arguments) {
 
 
 HXDumper.prototype.dumpVariableDeclaration = function(element) {
+    this.updateLineMappingWithInput(element);
     this.write('var ');
 
     var variableDeclarators = element.variableDeclarators;
@@ -1882,6 +1911,7 @@ HXDumper.prototype.dumpVariableDeclaration = function(element) {
 
 
 HXDumper.prototype.type = function(input) {
+    this.updateLineMappingWithInput(input);
     if (input.cachedText) {
         var rawType = input.cachedText;
         if (rawType === 'string') return 'String';
@@ -1970,11 +2000,7 @@ HXDumper.prototype.typeFromValue = function(input) {
 };
 
 
-HXDumper.prototype.extract = function(input, updateLineMapping) {
-
-    if (updateLineMapping) {
-        this.updateLineMappingWithInput(input);
-    }
+HXDumper.prototype.extract = function(input) {
 
     if (input.cachedText) {
         return input.cachedText;
@@ -2020,14 +2046,14 @@ HXDumper.prototype.indentSpaces = function(steps) {
 };
 
 
-HXDumper.prototype.modifiers = function(element, updateLineMapping) {
+HXDumper.prototype.modifiers = function(element) {
     var modifiers = {};
 
     // Explicit modifiers
     if (element.modifiers && element.modifiers.length) {
         for (var i = 0; i < element.modifiers.length; i++) {
             var rawModifier = element.modifiers[i];
-            var modifier = this.extract(rawModifier, updateLineMapping);
+            var modifier = this.extract(rawModifier);
             if (this.isIdentifier(modifier)) {
                 modifiers[modifier] = 1;
             }
