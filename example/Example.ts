@@ -77,6 +77,12 @@ class ClassExample implements InterfaceC {
         return '1.0';
     }
 
+    // Example with ternary operator
+    public static circInOut(t:number):number
+    {
+        return t <= .5 ? (Math.sqrt(1 - t * t * 4) - 1) / -2 : (Math.sqrt(1 - (t * 2 - 2) * (t * 2 - 2)) + 1) / 2;
+    }
+
     // Constructor with parameters that become properties
     constructor(public x:number, public y:number, public size:SizeInterface, enumValue:EnumExample, private ready:Function) {
 

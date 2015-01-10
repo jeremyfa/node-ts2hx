@@ -1392,7 +1392,14 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.write(this.type(input.type));
         }
         if (input.questionToken) {
-            this.write('?');
+            if (input.whenTrue && input.whenFalse) {
+                this.write(' ? ');
+                this.dumpValue(input.whenTrue);
+                this.write(' : ');
+                this.dumpValue(input.whenFalse);
+            } else {
+                this.write('?');
+            }
         }
         if (input.left) {
             this.dumpValue(input.left);
