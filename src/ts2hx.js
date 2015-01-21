@@ -995,7 +995,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         } else if (input.cachedText === 'undefined') {
             this.write('null');
         } else {
-            this.write(input.cachedText);
+            this.write(this.extract(input));
         }
     }
     else if (this.isForeachIteration(input)) {
@@ -2040,12 +2040,25 @@ HXDumper.prototype.typeFromValue = function(input) {
 HXDumper.prototype.extract = function(input) {
 
     if (input.cachedText) {
-        return input.cachedText;
+        return this.replaceKeywords(input.cachedText);
     }
     else if (input._fullSart != null && input._fullWidth != null) {
-        return this.ast.text.value.substr(input._fullStart, input._fullWidth).trim();
+        return this.replaceKeywords(this.ast.text.value.substr(input._fullStart, input._fullWidth).trim());
     }
     return null;
+};
+
+
+HXDumper.keywordReplacements = {
+    'from': '__from',
+    'to': '__to'
+};
+
+
+HXDumper.prototype.replaceKeywords = function(input) {
+    var replaced = HXDumper.keywordReplacements[input];
+    if (replaced != null) return replaced;
+    return input;
 };
 
 
