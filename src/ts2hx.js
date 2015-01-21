@@ -954,6 +954,7 @@ HXDumper.prototype.getFullStart = function(input) {
     var smallestFullStart = Number.MAX_VALUE;
 
     if (input != null && typeof(input) == 'object') {
+        if (input._fullStart != null) return input._fullStart;
         for (var key in input) {
             var subInput = input[key];
             if (subInput != null && typeof(subInput) == 'object') {
@@ -1400,7 +1401,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             this.dumpValue(input.left);
         }
         if (input.operand) {
-            if (input.operatorToken && input.operand._fullStart > input.operatorToken._fullStart) {
+            if (input.operatorToken && this.getFullStart(input.operand) > input.operatorToken._fullStart) {
                 this.write(this.extract(input.operatorToken));
             }
             this.dumpValue(input.operand);
@@ -1445,7 +1446,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
             if (value === ',') {
                 this.write(', ');
             } else if (input.operand) {
-                if (input.operand._fullStart < input.operatorToken._fullStart) {
+                if (this.getFullStart(input.operand) < input.operatorToken._fullStart) {
                     this.write(value);
                 }
             } else {
