@@ -943,13 +943,8 @@ HXDumper.prototype.updateLineMappingWithInput = function(input, customFullStart)
             dstCurrentLine += this.numberOfLinesBeforeOutput - 1;
         }
         if (this.lineMapping[String(dstCurrentLine)] == null) {
-            if (dstCurrentLine == 82) {
-                var srcBefore = JSON.stringify(this.ast.text.value.substring(0, fullStart+1));
-                console.log('LINE IS '+dstCurrentLine);
-            }
             var srcCurrentLine = this.ast.text.value.substring(0, fullStart+1).split("\n").length;
             this.lineMapping[String(dstCurrentLine)] = srcCurrentLine;
-            console.log(dstCurrentLine + ' -> ' + srcCurrentLine);
         }
     }
 };
@@ -2243,7 +2238,7 @@ module.exports = function(source, info) {
     json = ts2json(source);
 
     // Uncomment to write JSON AST to disk. Useful for debug.
-    fs.writeFileSync(__dirname+'/example.json', JSON.stringify(json, null, 4));
+    //fs.writeFileSync(__dirname+'/example.json', JSON.stringify(json, null, 4));
 
     // Then compile the AST to Haxe code
     var result = new HXDumper(json, info).dump();
