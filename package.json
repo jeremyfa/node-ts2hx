@@ -1,27 +1,27 @@
 {
-  "name": "ts2hx",
-  "version": "1.1.8",
-  "description": "Transpile Typescript to Haxe.",
-  "main": "src/ts2hx.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "bin": {
-    "ts2hx": "./src/cli/ts2hx"
-  },
-  "author": "Jeremy Faivre <contact@jeremyfa.com>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jeremyfa/node-ts2hx.git"
-  },
-  "dependencies": {
-    "commander": "^2.5.0",
-    "fs-extra": "^0.12.0",
-    "glob": "^4.0.6",
-    "lodash": "^2.4.1",
-    "persist": "^0.2.7",
-    "ts-orderer": "^0.1.1",
-    "ts2json": "^1.0.5"
-  }
+	"name": "ts2hx",
+	"version": "1.1.9",
+	"description": "Transpile Typescript to Haxe.",
+	"main": "src/ts2hx.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"bin": {
+		"ts2hx": "./src/cli/ts2hx"
+	},
+	"author": "Jeremy Faivre <contact@jeremyfa.com>",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/jeremyfa/node-ts2hx.git"
+	},
+	"dependencies": {
+		"commander": "^2.5.0",
+		"fs-extra": "^0.12.0",
+		"glob": "^4.0.6",
+		"lodash": "^2.4.1",
+		"persist": "^0.2.7",
+		"ts-orderer": "^0.1.1",
+		"ts2json": "^1.0.5"
+	}
 }
