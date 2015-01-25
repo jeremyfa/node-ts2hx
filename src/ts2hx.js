@@ -9,7 +9,7 @@ var HXDumper = function(ast, info) {
 
     // Filled info
     this.info = info;
-    if (!this.info.classes) {
+    if (this.info.classes == null) {
         this.info.classes = {};
         this.info.interfaces = {};
     }
@@ -18,7 +18,12 @@ var HXDumper = function(ast, info) {
     this.indent = 0;
     this.output = '';
     this.context = {};
-    this.rootContext = {};
+    if (this.info.rootContext == null) {
+        this.rootContext = {};
+        this.info.rootContext = this.rootContext;
+    } else {
+        this.rootContext = this.info.rootContext;
+    }
 
     // Maintain line-based source mapping
     this.lineMapping = {};
