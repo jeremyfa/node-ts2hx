@@ -49,13 +49,39 @@ HXDumper.prototype.addRootContextType = function(name, type) {
 
 
 HXDumper.prototype.contextType = function(name) {
+
     if (this.thisPrefix && name.substring(0, 5) === 'this.') {
         name = this.thisPrefix + ':' + name.substring(5);
     }
+
+    // Compute composed type
+    var lastDotIndex = name.lastIndexOf('.');
+    if (lastDotIndex != -1) {
+        var parentIdentifier = name.substr(0, lastDotIndex);
+        var subIdentifier = name.substring(lastDotIndex+1, name.length);
+        var parentType = this.contextType(parentIdentifier);
+        if (parentType != null) {
+            name = parentType + ':' + subIdentifier;
+        }
+    }
+
+    // Compute simple type
+    //
+    // Check in current context
     var type = this.context['type:'+name];
+
     if (type == null) {
+        // Check in root context
         type = this.rootContext['type:'+name];
     }
+
+    if (type == null) {
+        // Check if name is a class
+        if (this.info.classes[name] != null) {
+            return name + ':@static';
+        }
+    }
+
     return type;
 };
 
@@ -2153,13 +2179,13 @@ HXDumper.prototype.arrayAccessPrefix = function(input) {
 };
 
 
-HXDumper.prototype.isIdentifier = function(str, acceptThis) {
+HXDumper.prototype.isIdentifier = function(str, acceptComposedIdentifier) {
     var lowerCase = str.toLowerCase();
     if (lowerCase === "true" || lowerCase === "false") {
         return false;
     }
-    if (acceptThis) {
-        return /^(this\.)?[a-zA-Z][a-zA-Z0-9]*$/.test(str);
+    if (acceptComposedIdentifier) {
+        return /^([a-zA-Z][a-zA-Z0-9]*\.)*[a-zA-Z][a-zA-Z0-9]*$/.test(str);
     } else {
         return /^[a-zA-Z][a-zA-Z0-9]*$/.test(str);
     }
