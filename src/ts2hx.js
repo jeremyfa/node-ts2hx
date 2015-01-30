@@ -929,7 +929,7 @@ HXDumper.prototype.dumpCallSignature = function(signature) {
         this.write('(');
 
         if (signature.parameterList.parameters) {
-            this.dumpArguments(signature.parameterList.parameters);
+            this.dumpArguments(signature.parameterList.parameters, true);
         }
 
         this.write(')');
@@ -1916,12 +1916,23 @@ HXDumper.prototype.dumpTypeMembers = function(typeMembers) {
 };
 
 
-HXDumper.prototype.dumpArguments = function(arguments) {
+HXDumper.prototype.dumpArguments = function(arguments, updateContext) {
     var len = arguments.length;
 
     for (var i = 0; i < arguments.length; i++) {
         var arg = arguments[i];
         this.dumpValue(arg);
+        if (updateContext) {
+            if (arg.typeAnnotation) {
+                var type = this.type(arg.typeAnnotation.type);
+                if (type != null) {
+                    var name = this.extract(arg.identifier);
+                    if (name != null) {
+                        this.addContextType(name, type);
+                    }
+                }
+            }
+        }
         if (i < len - 1) {
             this.write(', ');
         }

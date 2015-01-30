@@ -304,6 +304,12 @@ class ClassExample implements InterfaceC {
             this.ready = null;
         }
     }
+
+    anotherMethod(someArgument:integer):void {
+        if (this.instanceArrayOfIntegers[someArgument] > 2) {
+            console.log('Some log');
+        }
+    }
 }
 
 // Example of inheritance
