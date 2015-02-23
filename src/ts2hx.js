@@ -7,6 +7,9 @@ var HXDumper = function(ast, info) {
     // Typescript AST
     this.ast = ast;
 
+    // Strict mode
+    this.strict = true;
+
     // Filled info
     this.info = info;
     if (this.info.classes == null) {
@@ -1229,7 +1232,7 @@ HXDumper.prototype.dumpValue = function(input, options) {
         else if (this.isPerformingArrayAccess(input)) {
             input = _.clone(input);
             input.canBeDumpedAsArrayKeyReference = true;
-            if (!this.isPerformingArrayAccessWithIntegerIdentifier(input)) {
+            if (!this.strict && !this.isPerformingArrayAccessWithIntegerIdentifier(input)) {
                 input.shouldBeDumpedAsCastedArrayKeyReference = true;
             }
             this.dumpValue(input);
@@ -1727,9 +1730,13 @@ HXDumper.prototype.dumpCondition = function(condition) {
                 if (operator === '!') {
                     this.write('!');
                 }
-                this.write('Ts2Hx.isTrue(');
-                this.write(arg);
-                this.write(')');
+                if (this.strict) {
+                    this.write(arg);
+                } else {
+                    this.write('Ts2Hx.isTrue(');
+                    this.write(arg);
+                    this.write(')');
+                }
                 return;
             }
         } else {
@@ -1739,9 +1746,13 @@ HXDumper.prototype.dumpCondition = function(condition) {
             if (this.isFunctionCall(condition)) {
                 this.write(arg);
             } else {
-                this.write('Ts2Hx.isTrue(');
-                this.write(arg);
-                this.write(')');
+                if (this.strict) {
+                    this.write(arg);
+                } else {
+                    this.write('Ts2Hx.isTrue(');
+                    this.write(arg);
+                    this.write(')');
+                }
             }
             return;
         }
@@ -2281,7 +2292,12 @@ HXDumper.prototype.value = function(input, options) {
 
 
 // Export function
-module.exports = function(source, info) {
+module.exports = function(source, info, options) {
+    // Options
+    if (options == null) {
+        options = {};
+    }
+
     // Info object that will get filled when parsing
     if (info == null) {
         info = {};
@@ -2297,7 +2313,9 @@ module.exports = function(source, info) {
     //fs.writeFileSync(__dirname+'/example.json', JSON.stringify(json, null, 4));
 
     // Then compile the AST to Haxe code
-    var result = new HXDumper(json, info).dump();
+    var dumper = new HXDumper(json, info);
+    dumper.strict = options.strict;
+    var result = dumper.dump();
 
     // Return result
     return result;

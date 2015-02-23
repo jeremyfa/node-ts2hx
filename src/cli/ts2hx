@@ -14,6 +14,7 @@ cli.option('-h, --haxe [haxe]', 'Directory of already compiled haxe files');
 cli.option('-t, --typescript [typescript]', 'Directory of typescript files to compile to haxe');
 cli.option('-d, --destination [destination]', 'Destination directory where final haxe files will be put');
 cli.option('-x, --exclude [exclude]', 'Directory to exclude from typescript input.');
+cli.option('-s, --strict', 'Make transpiling stricter to improve performances of haxe code.');
 cli.parse(process.argv);
 
 // Path parsing
@@ -51,7 +52,7 @@ if (!(cli.haxe && cli.typescript && cli.destination)) {
     var tsCode = String(fs.readFileSync(fullPath));
 
     // Compile
-    process.stdout.write(ts2hx(tsCode));
+    process.stdout.write(ts2hx(tsCode, null, {strict: cli.strict}));
 }
 else {
 
@@ -71,5 +72,5 @@ else {
     }
 
     // Compile directories
-    utils.compileDirectories(tsPath, hxPath, excludePath, destPath, true);
+    utils.compileDirectories(tsPath, hxPath, excludePath, destPath, true, {strict: cli.strict});
 }

@@ -6,7 +6,7 @@ var glob = require('glob');
 var ts2hx = require('./ts2hx');
 var tsOrderer = require('ts-orderer');
 
-exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, verbose) {
+exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, verbose, options) {
 
     var log;
     if (verbose) {
@@ -107,7 +107,7 @@ exports.compileDirectories = function(tsPath, hxPath, excludePath, destPath, ver
             log('compile '+fileName+'.ts -> '+simpleFilePath);
 
             var tsCode = String(fs.readFileSync(tsFilePath));
-            var hxCode = ts2hx(tsCode, info);
+            var hxCode = ts2hx(tsCode, info, options);
 
             if (fs.existsSync(finalFilePath)) {
                 fs.unlinkSync(finalFilePath);
