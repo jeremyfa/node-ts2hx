@@ -9,7 +9,7 @@ Typescript is officially supported by several IDEs (Webstorm/IntelliJ, Visual St
 
 Using ``ts2hx``, I am able to compile a **pixi.js**-based (http://pixijs.com) HTML5 app written in Typescript and make it work at **almost native speed** on mobile devices with **openFL** CPP target (yes, it becomes possible to compile Typescript to C++!). The only code that needs to be re-written in Haxe is the platform-specific code (use **openFL** API instead of **pixi.js** etc...). If all the platform-specific code is properly encapsuled in reusable classes, the rest of the code (all the app logic) can become 100% portable and compilable to **valid haxe code**.
 
-That said, keep in mind this project is **experimental** and was more a challenge than a tool I would use for a serious project. Still very fun to implement!
+That said, keep in mind this project is **experimental**. Still very fun to implement!
 
 ## How to use
 
@@ -233,7 +233,7 @@ Classes are properly converted, including typescript-specific features like gett
 **Typescript**
 
 ```typescript
-class FooClass extends BarClass, BazClass implements QuxInterface {
+class FooClass extends BarClass implements QuxInterface, BazClass {
 
     private prop1:number;
     static prop2:number = 0;
@@ -256,7 +256,7 @@ class FooClass extends BarClass, BazClass implements QuxInterface {
 **Haxe**
 
 ```haxe
-class FooClass extends BarClass extends BazClass implements QuxInterface {
+class FooClass extends BarClass implements QuxInterface implements BazClass {
 
     private var prop1:Float;
 
