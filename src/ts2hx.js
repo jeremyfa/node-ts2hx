@@ -148,18 +148,35 @@ HXDumper.prototype.dumpModuleElements = function(elements) {
         this.writeLineBreak();
     }
 
+    var hasImportsBefore = false;
     for (var i = 0; i < elements.length; i++) {
         var element = elements[i];
 
         if (element.classKeyword) {
+            if (hasImportsBefore) {
+                hasImportsBefore = false;
+                this.writeLineBreak();
+            }
             this.dumpClass(element);
         }
         else if (element.moduleKeyword && !this.hasWrittenPackage) {
+            if (hasImportsBefore) {
+                hasImportsBefore = false;
+                this.writeLineBreak();
+            }
             this.hasWrittenPackage = true;
             this.dumpModule(element);
         }
         else if (element.interfaceKeyword) {
+            if (hasImportsBefore) {
+                hasImportsBefore = false;
+                this.writeLineBreak();
+            }
             this.dumpInterface(element);
+        }
+        else if (element.importKeyword) {
+            this.dumpImport(element);
+            hasImportsBefore = true;
         }
         else {
             var modifiers = this.modifiers(element);
@@ -170,6 +187,34 @@ HXDumper.prototype.dumpModuleElements = function(elements) {
         }
     }
     this.popContext();
+};
+
+
+HXDumper.prototype.dumpImport = function(element) {
+    var moduleReferenceLastPart = null;
+
+    this.writeIndentSpaces();
+    this.write('import ');
+    this.updateLineMappingWithInput(element.importKeyword);
+    if (element.moduleReference != null && element.moduleReference.moduleName != null) {
+        this.dumpValue(element.moduleReference.moduleName);
+        moduleReferenceLastPart = this.value(element.moduleReference.moduleName);
+        if (moduleReferenceLastPart.indexOf('.') != -1) {
+            moduleReferenceLastPart = moduleReferenceLastPart.split('.');
+            moduleReferenceLastPart = moduleReferenceLastPart[moduleReferenceLastPart.length - 1];
+        }
+    }
+    if (element.semicolonToken != null) {
+        this.write(';');
+    }
+    this.writeLineBreak();
+
+    if (element.identifier != null && moduleReferenceLastPart != null) {
+        var identifier = this.value(element.identifier);
+        if (identifier != moduleReferenceLastPart) {
+            this.writeIndentedLine('typedef ' + identifier + ' = ' + moduleReferenceLastPart + ';');
+        }
+    }
 };
 
 
