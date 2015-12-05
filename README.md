@@ -1,6 +1,8 @@
 ts2hx
 =====
 
+:rotating_light: This library is not maintained anymore (it was a proof of concept) :rotating_light:
+
 Compile/Transpile typescript code to **ready-to-run** haxe code.
 
 ### Why?
